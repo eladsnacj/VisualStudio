@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using GitHub.InlineReviews.ViewModels;
 using GitHub.Models;
 using GitHub.Services;
+using GitHub.ViewModels;
 using NSubstitute;
 using NUnit.Framework;
 using ReactiveUI;
@@ -35,10 +36,7 @@ namespace GitHub.InlineReviews.UnitTests.ViewModels
             public void IsFalseWhenEditingExistingComment()
             {
                 var session = CreateSession(false);
-
-                var pullRequestReviewCommentModel = Substitute.For<IPullRequestReviewCommentModel>();
-                pullRequestReviewCommentModel.Id.Returns(1);
-
+                var pullRequestReviewCommentModel = new PullRequestReviewCommentModel { Id = "1" };
                 var target = CreateTarget(session, pullRequestReviewCommentModel: pullRequestReviewCommentModel);
 
                 Assert.That(target.CanStartReview, Is.False);
@@ -52,7 +50,7 @@ namespace GitHub.InlineReviews.UnitTests.ViewModels
             {
                 var session = CreateSession();
                 var thread = CreateThread();
-                var currentUser = Substitute.For<IAccount>();
+                var currentUser = Substitute.For<IActorViewModel>();
                 var target = PullRequestReviewCommentViewModel.CreatePlaceholder(session, thread, currentUser);
                 Assert.That(target.BeginEdit.CanExecute(new object()), Is.True);
             }
@@ -63,11 +61,8 @@ namespace GitHub.InlineReviews.UnitTests.ViewModels
                 var session = CreateSession();
                 var thread = CreateThread();
 
-                var currentUser = Substitute.For<IAccount>();
-                currentUser.Login.Returns("CurrentUser");
-
-                var pullRequestReviewCommentModel = Substitute.For<IPullRequestReviewCommentModel>();
-                pullRequestReviewCommentModel.User.Returns(currentUser);
+                var currentUser = new ActorModel { Login = "CurrentUser" };
+                var pullRequestReviewCommentModel = new PullRequestReviewCommentModel { Author = currentUser };
 
                 var target = CreateTarget(session, thread, currentUser, pullRequestReviewCommentModel);
                 Assert.That(target.BeginEdit.CanExecute(new object()), Is.True);
@@ -79,14 +74,9 @@ namespace GitHub.InlineReviews.UnitTests.ViewModels
                 var session = CreateSession();
                 var thread = CreateThread();
 
-                var currentUser = Substitute.For<IAccount>();
-                currentUser.Login.Returns("CurrentUser");
-
-                var otherUser = Substitute.For<IAccount>();
-                currentUser.Login.Returns("OtherUser");
-
-                var pullRequestReviewCommentModel = Substitute.For<IPullRequestReviewCommentModel>();
-                pullRequestReviewCommentModel.User.Returns(otherUser);
+                var currentUser = new ActorModel { Login = "CurrentUser" };
+                var otherUser = new ActorModel { Login = "OtherUser" };
+                var pullRequestReviewCommentModel = new PullRequestReviewCommentModel { Author = otherUser };
 
                 var target = CreateTarget(session, thread, currentUser, pullRequestReviewCommentModel);
                 Assert.That(target.BeginEdit.CanExecute(new object()), Is.False);
@@ -100,7 +90,7 @@ namespace GitHub.InlineReviews.UnitTests.ViewModels
             {
                 var session = CreateSession();
                 var thread = CreateThread();
-                var currentUser = Substitute.For<IAccount>();
+                var currentUser = Substitute.For<IActorViewModel>();
                 var target = PullRequestReviewCommentViewModel.CreatePlaceholder(session, thread, currentUser);
                 Assert.That(target.Delete.CanExecute(new object()), Is.False);
             }
@@ -111,11 +101,8 @@ namespace GitHub.InlineReviews.UnitTests.ViewModels
                 var session = CreateSession();
                 var thread = CreateThread();
 
-                var currentUser = Substitute.For<IAccount>();
-                currentUser.Login.Returns("CurrentUser");
-
-                var pullRequestReviewCommentModel = Substitute.For<IPullRequestReviewCommentModel>();
-                pullRequestReviewCommentModel.User.Returns(currentUser);
+                var currentUser = new ActorModel { Login = "CurrentUser" };
+                var pullRequestReviewCommentModel = new PullRequestReviewCommentModel { Author = currentUser };
 
                 var target = CreateTarget(session, thread, currentUser, pullRequestReviewCommentModel);
                 Assert.That(target.Delete.CanExecute(new object()), Is.True);
@@ -127,14 +114,9 @@ namespace GitHub.InlineReviews.UnitTests.ViewModels
                 var session = CreateSession();
                 var thread = CreateThread();
 
-                var currentUser = Substitute.For<IAccount>();
-                currentUser.Login.Returns("CurrentUser");
-
-                var otherUser = Substitute.For<IAccount>();
-                currentUser.Login.Returns("OtherUser");
-
-                var pullRequestReviewCommentModel = Substitute.For<IPullRequestReviewCommentModel>();
-                pullRequestReviewCommentModel.User.Returns(otherUser);
+                var currentUser = new ActorModel { Login = "CurrentUser" };
+                var otherUser = new ActorModel { Login = "OtherUser" };
+                var pullRequestReviewCommentModel = new PullRequestReviewCommentModel { Author = otherUser };
 
                 var target = CreateTarget(session, thread, currentUser, pullRequestReviewCommentModel);
                 Assert.That(target.Delete.CanExecute(new object()), Is.False);
@@ -165,10 +147,7 @@ namespace GitHub.InlineReviews.UnitTests.ViewModels
             public void IsUpdateCommentWhenEditingExistingComment()
             {
                 var session = CreateSession(false);
-
-                var pullRequestReviewCommentModel = Substitute.For<IPullRequestReviewCommentModel>();
-                pullRequestReviewCommentModel.Id.Returns(1);
-
+                var pullRequestReviewCommentModel = new PullRequestReviewCommentModel { Id = "1" };
                 var target = CreateTarget(session, pullRequestReviewCommentModel: pullRequestReviewCommentModel);
 
                 Assert.That(target.CommitCaption, Is.EqualTo("Update comment"));
@@ -222,19 +201,19 @@ namespace GitHub.InlineReviews.UnitTests.ViewModels
         static PullRequestReviewCommentViewModel CreateTarget(
             IPullRequestSession session = null,
             ICommentThreadViewModel thread = null,
-            IAccount currentUser = null,
-            IPullRequestReviewCommentModel pullRequestReviewCommentModel = null)
+            ActorModel currentUser = null,
+            PullRequestReviewCommentModel pullRequestReviewCommentModel = null)
         {
             session = session ?? CreateSession();
             thread = thread ?? CreateThread();
 
-            currentUser = currentUser ?? Substitute.For<IAccount>();
-            pullRequestReviewCommentModel = pullRequestReviewCommentModel ?? Substitute.For<IPullRequestReviewCommentModel>();
+            currentUser = currentUser ?? new ActorModel { Login = "CurrentUser" };
+            pullRequestReviewCommentModel = pullRequestReviewCommentModel ?? new PullRequestReviewCommentModel();
 
             return new PullRequestReviewCommentViewModel(
                 session,
                 thread,
-                currentUser,
+                new ActorViewModel(currentUser),
                 pullRequestReviewCommentModel);
         }
 
@@ -243,6 +222,7 @@ namespace GitHub.InlineReviews.UnitTests.ViewModels
         {
             var result = Substitute.For<IPullRequestSession>();
             result.HasPendingReview.Returns(hasPendingReview);
+            result.User.Returns(new ActorModel());
             return result;
         }
 
@@ -250,7 +230,6 @@ namespace GitHub.InlineReviews.UnitTests.ViewModels
             bool canPost = true)
         {
             var result = Substitute.For<ICommentThreadViewModel>();
-            result.PostComment.Returns(new ReactiveCommand<ICommentModel>(Observable.Return(canPost), _ => null));
             return result;
         }
     }
